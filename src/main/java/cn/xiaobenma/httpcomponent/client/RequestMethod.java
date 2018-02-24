@@ -1,4 +1,4 @@
-package cn.xiaobenma020.httpcomponent.client;
+package cn.xiaobenma.httpcomponent.client;
 
 /**
  * Definition for http request method

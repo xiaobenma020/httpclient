@@ -1,6 +1,6 @@
-package cn.xiaobenma020.httpcomponent.client;
+package cn.xiaobenma.httpcomponent.client;
 
-import cn.xiaobenma020.httpcomponent.response.Response;
+import cn.xiaobenma.httpcomponent.response.Response;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -11,8 +11,7 @@ import java.io.IOException;
 public class JSONHttpClientTest {
     @Test
     public void testGetResponse() throws IOException {
-        JSONHttpClient client = new JSONHttpClient("https://xxx.xx/api/user/login.do"
-                , RequestMethod.POST);
+        JSONHttpClient client = new JSONHttpClient("https://xxx.xx/api/user/login.do", RequestMethod.POST);
         client.setConnectTimeout(1000);
         client.addParameter("loginId", "xiaobenma020@gmail.com");
         client.addParameter("password", "xxxxxx");

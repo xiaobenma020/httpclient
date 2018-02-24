@@ -1,7 +1,7 @@
-package cn.xiaobenma020.httpcomponent.response;
+package cn.xiaobenma.httpcomponent.response;
 
 
-import cn.xiaobenma020.httpcomponent.client.Header;
+import cn.xiaobenma.httpcomponent.client.Header;
 
 import java.util.LinkedHashMap;
 import java.util.List;

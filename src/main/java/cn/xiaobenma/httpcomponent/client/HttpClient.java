@@ -1,6 +1,6 @@
-package cn.xiaobenma020.httpcomponent.client;
+package cn.xiaobenma.httpcomponent.client;
 
-import cn.xiaobenma020.httpcomponent.response.Response;
+import cn.xiaobenma.httpcomponent.response.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -12,7 +12,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +26,7 @@ public abstract class HttpClient {
     private String url;
     private RequestMethod method;
     private Map<String, Object> urlParameters;
+    private Map<String, Object> urlTemplateParameters;
     private Map<String, Header> headers;
     private String requestCharset = "UTF-8";
     private String responseCharset = "UTF-8";
@@ -30,11 +34,12 @@ public abstract class HttpClient {
     private int readTimeout = -1;
 
 
-    public HttpClient(String url, RequestMethod method)  {
+    public HttpClient(String url, RequestMethod method) {
         this.url = url;
         this.method = method;
-        urlParameters =  new LinkedHashMap<>();
+        urlParameters = new LinkedHashMap<>();
         headers = new LinkedHashMap<>();
+        urlTemplateParameters = new LinkedHashMap<>();
     }
 
     public URL getURL() {
@@ -45,9 +50,19 @@ public abstract class HttpClient {
         }
     }
 
+    /**
+     * Add URL Template parameter
+     * @param name parameter name
+     * @param value parameter value
+     */
+    public void addURLTemplateParameter(String name, Object value) {
+        urlTemplateParameters.put(name, value);
+    }
+
 
     /**
      * Gets URL Parameters
+     *
      * @return Parameter Map
      */
     public Map<String, Object> getURLParameters() {
@@ -56,7 +71,8 @@ public abstract class HttpClient {
 
     /**
      * Add URL Parameter
-     * @param name Parameter name
+     *
+     * @param name  Parameter name
      * @param value Parameter value
      */
     public void addURLParameter(String name, Object value) {
@@ -65,6 +81,7 @@ public abstract class HttpClient {
 
     /**
      * Adds multi URL Parameters
+     *
      * @param urlParams
      */
     public void addURLParameters(Map<String, Object> urlParams) {
@@ -75,6 +92,7 @@ public abstract class HttpClient {
 
     /**
      * Removes URL parameter by name
+     *
      * @param name Parameter name
      */
     public void removeURLParameter(String name) {
@@ -83,6 +101,7 @@ public abstract class HttpClient {
 
     /**
      * Adds headers
+     *
      * @param headers Headers to add
      */
     public void addHeaders(Map<String, String> headers) {
@@ -93,7 +112,8 @@ public abstract class HttpClient {
 
     /**
      * Adds header
-     * @param name Header name
+     *
+     * @param name  Header name
      * @param value Header value
      */
     public void addHeader(String name, String value) {
@@ -106,6 +126,7 @@ public abstract class HttpClient {
 
     /**
      * Removes header by name
+     *
      * @param name Header name
      */
     public void removeHeader(String name) {
@@ -114,6 +135,7 @@ public abstract class HttpClient {
 
     /**
      * Gets header by name
+     *
      * @param name
      * @return
      */
@@ -123,6 +145,7 @@ public abstract class HttpClient {
 
     /**
      * Gets all headers
+     *
      * @return Headers
      */
     public Header[] getAllHeaders() {
@@ -131,6 +154,7 @@ public abstract class HttpClient {
 
     /**
      * Gets request charset
+     *
      * @return Request charset
      */
     public String getRequestCharset() {
@@ -139,6 +163,7 @@ public abstract class HttpClient {
 
     /**
      * Sets request charset
+     *
      * @param requestCharset Request charset to set
      */
     public void setRequestCharset(String requestCharset) {
@@ -147,6 +172,7 @@ public abstract class HttpClient {
 
     /**
      * Gets response charset
+     *
      * @return Response charset
      */
     public String getResponseCharset() {
@@ -155,6 +181,7 @@ public abstract class HttpClient {
 
     /**
      * Sets response charset
+     *
      * @param responseCharset Response charset
      */
     public void setResponseCharset(String responseCharset) {
@@ -180,6 +207,17 @@ public abstract class HttpClient {
 
     private String getURLWithQueryString() {
         String apiURL = url;
+
+        for (Map.Entry entry : urlTemplateParameters.entrySet()) {
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            try {
+                apiURL = apiURL.replace("{" + key + "}", URLEncoder.encode(value, requestCharset));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
         String queryStr = getQueryString();
         if (!StringUtils.isBlank(queryStr)) {
             apiURL = apiURL + (apiURL.contains("?") ? "&" : "?") + queryStr;
@@ -189,24 +227,28 @@ public abstract class HttpClient {
 
     /**
      * Check whether to output
+     *
      * @return Result
      */
     abstract boolean doOutput();
 
     /**
      * Gets request body
+     *
      * @return Request body
      */
     abstract String getRequestBody();
 
     /**
      * Gets Content-Type
+     *
      * @return Content-Type
      */
     abstract String getContentType();
 
     /**
      * Gets connect timeout
+     *
      * @return Connect timeout
      */
     public int getConnectTimeout() {
@@ -215,6 +257,7 @@ public abstract class HttpClient {
 
     /**
      * Sets connect timeout
+     *
      * @param connectTimeout Connect timeout to set
      */
     public void setConnectTimeout(int connectTimeout) {
@@ -223,6 +266,7 @@ public abstract class HttpClient {
 
     /**
      * Gets readTimeout
+     *
      * @return ReadTime
      */
     public int getReadTimeout() {
@@ -231,6 +275,7 @@ public abstract class HttpClient {
 
     /**
      * Sets readTimeout
+     *
      * @param readTimeout ReadTimeout to set
      */
     public void setReadTimeout(int readTimeout) {
@@ -239,6 +284,7 @@ public abstract class HttpClient {
 
     /**
      * Gets response
+     *
      * @return Response
      * @throws IOException
      */
@@ -247,7 +293,7 @@ public abstract class HttpClient {
         if (null == url) {
             return null;
         }
-        HttpURLConnection connection = (HttpURLConnection) getURL().openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method.name());
         connection.setDoOutput(doOutput());
         if (connectTimeout > 0) {
@@ -293,7 +339,10 @@ public abstract class HttpClient {
 
     }
 
-    private  String findCharset(String contentType) {
+    private String findCharset(String contentType) {
+        if (StringUtils.isBlank(contentType)) {
+            return null;
+        }
         Pattern pattern = Pattern.compile("charset=([a-zA-Z0-9-]+);?");
         Matcher matcher = pattern.matcher(contentType);
         if (matcher.find()) {
@@ -302,7 +351,10 @@ public abstract class HttpClient {
         return null;
     }
 
-    private  String findMimeType(String contentType) {
+    private String findMimeType(String contentType) {
+        if (StringUtils.isBlank(contentType)) {
+            return null;
+        }
         Pattern pattern = Pattern.compile("([a-zA-Z0-9-]+/[a-zA-Z0-9-]+);?");
         Matcher matcher = pattern.matcher(contentType);
         if (matcher.find()) {
